@@ -27,23 +27,28 @@ pip install openai
 # TTS hazard check only (no API key needed)
 python src/bhashacut.py my_script.txt --hazards-only
 
-# Full polish (needs Apertus endpoint)
-export PUBLICAI_API_KEY="your-key"  # from https://publicai.co
+# Full polish (needs an Apertus endpoint)
+export LLM_API_KEY="your-key"  # from https://publicai.co
+export LLM_NAME="swiss-ai/Apertus-v1.5-8B"
+export LLM_BASE_URL="https://api.publicai.co/v1"
 python src/bhashacut.py my_script.txt --target hinglish
 ```
+
+No key? The tool runs in deterministic fixture mode (mock Apertus responses),
+so `make run` and `--hazards-only` always work offline.
 
 ### Local Ollama (no key, offline)
 
 ```bash
-ollama pull MichelRosselli/apertus:8b-instruct-2509-q4_k_m
-export APERTUS_BASE_URL="http://localhost:11434/v1"
-export APERTUS_MODEL="MichelRosselli/apertus:8b-instruct-2509-q4_k_m"
+# Pull an Apertus v1.5 8B instruct model in Ollama, then:
+export LLM_BASE_URL="http://localhost:11434/v1"
+export LLM_NAME="swiss-ai/Apertus-v1.5-8B"
 python src/bhashacut.py my_script.txt
 ```
 
 ## Hack Apertus - Track 2B: Own Project
 
-Built for [Hack Apertus](https://hackapertus.devpost.com/) Online Hackathon (Oct 1-16, 2026).
+Built for [Hack Apertus](https://hackapertus.ch) Online Hackathon (Oct 1-16, 2026).
 
 **Judging criteria addressed:**
 - **Purposeful use of AI**: Solves a real problem for 100M+ Indian content creators wrestling with multilingual scripts
@@ -54,4 +59,4 @@ Built for [Hack Apertus](https://hackapertus.devpost.com/) Online Hackathon (Oct
 
 ## License
 
-MIT
+Creative Commons Attribution 4.0 (CC-BY-4.0). All Hack Apertus projects are open-sourced. See [LICENSE](LICENSE).

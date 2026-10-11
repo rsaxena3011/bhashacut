@@ -1,16 +1,21 @@
 """
-BhashaCut: Hinglish Video Script Assistant powered by Apertus.
+BhashaCut: Hinglish Video Script Assistant powered by Apertus v1.5.
 
 Uses Switzerland's open Apertus LLM (Apache 2.0) to polish Hindi/English
 mixed video scripts, flag TTS hazards, and check terminology consistency.
 
-Apertus is trained on 1800+ languages with strong multilingual support,
+Apertus v1.5 is trained on 1800+ languages with strong multilingual support,
 making it ideal for Hinglish code-switching that trips up most models.
 
 API: OpenAI-compatible. Works with:
-- Public AI Inference Utility: https://api.publicai.co/v1 (needs PUBLICAI_API_KEY)
-- Local Ollama: http://localhost:11434/v1 (model: MichelRosselli/apertus:8b-instruct-2509-q4_k_m)
+- Public AI Inference Utility: https://api.publicai.co/v1 (needs LLM_API_KEY)
+- Local Ollama: http://localhost:11434/v1 (model: swiss-ai/Apertus-v1.5-8B)
 - Any OpenAI-compatible Apertus endpoint
+
+Environment variables (per Hack Apertus template):
+- LLM_NAME: model ID (default: swiss-ai/Apertus-v1.5-8B)
+- LLM_BASE_URL: API endpoint (default: https://api.publicai.co/v1)
+- LLM_API_KEY: API key (or "mock" for fixture mode)
 """
 
 from __future__ import annotations
@@ -44,25 +49,43 @@ class ScriptIssue:
 
 
 class BhashaCut:
-    """Hinglish script assistant using Apertus."""
+    """Hinglish script assistant using Apertus v1.5."""
+
+    # Apertus v1.5 model IDs (per Hack Apertus Track 2B resources)
+    DEFAULT_MODEL = "swiss-ai/Apertus-v1.5-8B"
+    # Legacy alias mapping for compatibility
+    MODEL_ALIASES = {
+        "swiss-ai/apertus-8b-instruct": "swiss-ai/Apertus-v1.5-8B",
+    }
 
     def __init__(
         self,
         base_url: Optional[str] = None,
         api_key: Optional[str] = None,
-        model: str = "swiss-ai/apertus-8b-instruct",
+        model: Optional[str] = None,
     ):
-        self.base_url = base_url or os.environ.get("APERTUS_BASE_URL", "https://api.publicai.co/v1")
-        self.api_key = api_key or os.environ.get("PUBLICAI_API_KEY", "not-needed-for-ollama")
-        self.model = model or os.environ.get("APERTUS_MODEL", "swiss-ai/apertus-8b-instruct")
+        # Per Hack Apertus template: LLM_NAME, LLM_BASE_URL, LLM_API_KEY
+        self.base_url = (base_url or os.environ.get("LLM_BASE_URL", "https://api.publicai.co/v1")).rstrip("/")
+        self.api_key = api_key or os.environ.get("LLM_API_KEY", "")
+        raw_model = model or os.environ.get("LLM_NAME", self.DEFAULT_MODEL)
+        # Map legacy aliases to v1.5
+        self.model = self.MODEL_ALIASES.get(raw_model, raw_model)
 
-        if OpenAI is None:
+        # Fixture/mock mode: allows make run without API key
+        self.mock_mode = self.api_key == "mock" or not self.api_key
+
+        if not self.mock_mode and OpenAI is None:
             raise ImportError("pip install openai to use BhashaCut")
 
-        # Public AI requires non-OpenAI User-Agent; httpx default is fine
-        self.client = OpenAI(base_url=self.base_url, api_key=self.api_key)
+        if not self.mock_mode:
+            self.client = OpenAI(base_url=self.base_url, api_key=self.api_key)
+        else:
+            self.client = None
 
     def _chat(self, system: str, user: str, max_tokens: int = 1000) -> str:
+        if self.mock_mode:
+            # Fixture mode: return deterministic placeholder for make run without API key
+            return f"[MOCK Apertus v1.5 response - set LLM_API_KEY for live inference]\nSystem: {system[:80]}..."
         resp = self.client.chat.completions.create(
             model=self.model,
             messages=[
@@ -88,18 +111,22 @@ class BhashaCut:
                     ))
         return issues
 
-    def polish(self, script: str, target: str = "hinglish") -> str:
+    def polish(self, script: str, target: str = "hinglish") -> dict:
         """
-        Polish a rough script using Apertus.
+        Polish a rough script using Apertus v1.5, with TTS hazard gate on output.
 
         target: 'hinglish' (natural code-switch), 'hindi' (pure Devanagari),
                 'english' (pure English)
+
+        Returns dict with polished text and TTS hazards found in the output.
         """
         system = (
             "You are BhashaCut, an expert video script editor for Indian content creators. "
             "You polish Hindi-English mixed (Hinglish) scripts for voiceover and on-screen text. "
             "Preserve the speaker's intent, energy, and cultural references. "
-            "Fix grammar, smooth code-switching, and ensure natural flow."
+            "Fix grammar, smooth code-switching, and ensure natural flow. "
+            "Avoid TTS-unfriendly characters: do not use the ellipsis character, "
+            "avoid problematic conjuncts, keep script consistent within words."
         )
         target_instruction = {
             "hinglish": "Polish into natural Hinglish (Hindi in Devanagari mixed with English where natural).",
@@ -108,7 +135,18 @@ class BhashaCut:
         }.get(target, "Polish into natural Hinglish.")
 
         user = f"{target_instruction}\n\nScript:\n{script}"
-        return self._chat(system, user, max_tokens=2000)
+        polished = self._chat(system, user, max_tokens=2000)
+
+        # TTS gate: scan model output for hazards (not just input)
+        output_hazards = self.check_tts_hazards(polished)
+
+        return {
+            "polished_script": polished,
+            "tts_hazards_in_output": [
+                {"line": h.line_num, "text": h.text, "detail": h.detail}
+                for h in output_hazards
+            ],
+        }
 
     def check_consistency(self, script: str) -> str:
         """Check character names and terminology consistency using Apertus."""
@@ -123,13 +161,17 @@ class BhashaCut:
     def full_report(self, script: str, target: str = "hinglish") -> dict:
         """Run all checks and return a structured report."""
         hazards = self.check_tts_hazards(script)
+        polish_result = self.polish(script, target)
         return {
-            "tts_hazards": [
+            "tts_hazards_in_input": [
                 {"line": h.line_num, "category": h.category, "text": h.text, "detail": h.detail}
                 for h in hazards
             ],
-            "polished_script": self.polish(script, target),
+            "polished_script": polish_result["polished_script"],
+            "tts_hazards_in_output": polish_result["tts_hazards_in_output"],
             "consistency_notes": self.check_consistency(script),
+            "model": self.model,
+            "mock_mode": self.mock_mode,
         }
 
 

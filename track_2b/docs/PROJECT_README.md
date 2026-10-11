@@ -19,31 +19,42 @@ Indian video creators constantly juggle Hindi, English, and Hinglish in scripts,
 - **Multilingual by design**: 40% non-English training tokens, 1800+ languages.
 - **No vendor lock-in**: runs on Public AI, local Ollama, or self-hosted vLLM.
 
-## Quick start
+## Quick start (run from the `track_2b/` directory)
+
+```bash
+make run  # builds the Docker image, runs the offline TTS hazard detector; no API key needed
+```
+
+Or without Docker:
 
 ```bash
 pip install openai
 
 # TTS hazard check only (no API key needed)
-python src/bhashacut.py my_script.txt --hazards-only
+python src/bhashacut.py data/sample_script.txt --hazards-only
 
-# Full polish (needs Apertus endpoint)
-export PUBLICAI_API_KEY="your-key"  # from https://publicai.co
-python src/bhashacut.py my_script.txt --target hinglish
+# Full polish (needs an Apertus endpoint)
+export LLM_API_KEY="your-key"  # from https://publicai.co
+export LLM_NAME="swiss-ai/Apertus-v1.5-8B"
+export LLM_BASE_URL="https://api.publicai.co/v1"
+python src/bhashacut.py data/sample_script.txt --target hinglish
 ```
+
+No key? The tool runs in deterministic fixture mode (mock Apertus responses),
+so `make run` and `--hazards-only` always work offline.
 
 ### Local Ollama (no key, offline)
 
 ```bash
-ollama pull MichelRosselli/apertus:8b-instruct-2509-q4_k_m
-export APERTUS_BASE_URL="http://localhost:11434/v1"
-export APERTUS_MODEL="MichelRosselli/apertus:8b-instruct-2509-q4_k_m"
-python src/bhashacut.py my_script.txt
+# Pull an Apertus v1.5 8B instruct model in Ollama, then:
+export LLM_BASE_URL="http://localhost:11434/v1"
+export LLM_NAME="swiss-ai/Apertus-v1.5-8B"
+python src/bhashacut.py data/sample_script.txt
 ```
 
 ## Hack Apertus - Track 2B: Own Project
 
-Built for [Hack Apertus](https://hackapertus.devpost.com/) Online Hackathon (Oct 1-16, 2026).
+Built for [Hack Apertus](https://hackapertus.ch) Online Hackathon (Oct 1-16, 2026).
 
 **Judging criteria addressed:**
 - **Purposeful use of AI**: Solves a real problem for 100M+ Indian content creators wrestling with multilingual scripts
@@ -54,4 +65,4 @@ Built for [Hack Apertus](https://hackapertus.devpost.com/) Online Hackathon (Oct
 
 ## License
 
-MIT
+Creative Commons Attribution 4.0 (CC-BY-4.0). All Hack Apertus projects are open-sourced.

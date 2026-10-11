@@ -9,7 +9,7 @@ build:
 # For full Apertus features, set LLM_API_KEY env var
 run: build
 	docker run --rm \
-		-e LLM_NAME=$${LLM_NAME:-swiss-ai/apertus-8b-instruct} \
+		-e LLM_NAME=$${LLM_NAME:-swiss-ai/Apertus-v1.5-8B} \
 		-e LLM_BASE_URL=$${LLM_BASE_URL:-https://api.publicai.co/v1} \
 		-e LLM_API_KEY=$${LLM_API_KEY} \
 		bhashacut
