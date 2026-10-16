@@ -26,20 +26,20 @@ Data flow: Input text file → TTS hazard scan (offline) → Apertus polish (API
 
 ### Target architecture (mandatory)
 
-**a) On-premise**: BhashaCut is deployable on-premise. The TTS hazard detector runs fully offline with zero external dependencies. The Apertus model can be self-hosted via Ollama (`swiss-ai/Apertus-v1.5-8B`) or vLLM on the organisation's own infrastructure. The Docker container includes all dependencies.
+**a) On-premise**: BhashaCut is deployable on-premise. The TTS hazard detector runs fully offline with zero external dependencies. The Apertus model can be self-hosted via Ollama (`swiss-ai/apertus-v1.5-8b`) or vLLM on the organisation's own infrastructure. The Docker container includes all dependencies.
 
 External dependencies at runtime: Only the Apertus API endpoint (configurable via `LLM_BASE_URL`). With a local Ollama instance, there are zero external network calls.
 
 ## 3. Use of Apertus
 
-- **Model:** `swiss-ai/Apertus-v1.5-8B` (via Public AI hosted endpoint)
+- **Model:** `swiss-ai/apertus-v1.5-8b` (via Public AI hosted endpoint)
 - **How it is used:** inference
 - **Where it runs:** Hosted endpoint `https://api.publicai.co/v1` (also supports local Ollama)
 
 The polisher sends the raw script with a system prompt instructing Apertus to produce natural, voiceover-ready text while preserving meaning, tone, and code-switching patterns appropriate to the target language. Temperature is set low (0.3) for consistent output. The model choice leverages Apertus's multilingual training (1800+ languages, 40% non-English tokens) which handles Hindi-English code-switching better than English-centric models.
 
 Environment variables:
-- `LLM_NAME`: model name (default: `swiss-ai/Apertus-v1.5-8B`)
+- `LLM_NAME`: model name (default: `swiss-ai/apertus-v1.5-8b`)
 - `LLM_BASE_URL`: API endpoint (default: `https://api.publicai.co/v1`)
 - `LLM_API_KEY`: API key for the endpoint
 

@@ -9,11 +9,11 @@ making it ideal for Hinglish code-switching that trips up most models.
 
 API: OpenAI-compatible. Works with:
 - Public AI Inference Utility: https://api.publicai.co/v1 (needs LLM_API_KEY)
-- Local Ollama: http://localhost:11434/v1 (model: swiss-ai/Apertus-v1.5-8B)
+- Local Ollama: http://localhost:11434/v1 (model: swiss-ai/apertus-v1.5-8b)
 - Any OpenAI-compatible Apertus endpoint
 
 Environment variables (per Hack Apertus template):
-- LLM_NAME: model ID (default: swiss-ai/Apertus-v1.5-8B)
+- LLM_NAME: model ID (default: swiss-ai/apertus-v1.5-8b)
 - LLM_BASE_URL: API endpoint (default: https://api.publicai.co/v1)
 - LLM_API_KEY: API key (or "mock" for fixture mode)
 """
@@ -52,10 +52,12 @@ class BhashaCut:
     """Hinglish script assistant using Apertus v1.5."""
 
     # Apertus v1.5 model IDs (per Hack Apertus Track 2B resources)
-    DEFAULT_MODEL = "swiss-ai/Apertus-v1.5-8B"
+    # NOTE: Public AI model IDs are case-sensitive; the mixed-case variant
+    # returns 403 "key not allowed to access model". Verified 2026-10-15.
+    DEFAULT_MODEL = "swiss-ai/apertus-v1.5-8b"
     # Legacy alias mapping for compatibility
     MODEL_ALIASES = {
-        "swiss-ai/apertus-8b-instruct": "swiss-ai/Apertus-v1.5-8B",
+        "swiss-ai/apertus-8b-instruct": "swiss-ai/apertus-v1.5-8b",
     }
 
     def __init__(

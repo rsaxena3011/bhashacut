@@ -29,7 +29,7 @@ python src/bhashacut.py my_script.txt --hazards-only
 
 # Full polish (needs an Apertus endpoint)
 export LLM_API_KEY="your-key"  # from https://publicai.co
-export LLM_NAME="swiss-ai/Apertus-v1.5-8B"
+export LLM_NAME="swiss-ai/apertus-v1.5-8b"
 export LLM_BASE_URL="https://api.publicai.co/v1"
 python src/bhashacut.py my_script.txt --target hinglish
 ```
@@ -42,7 +42,7 @@ so `make run` and `--hazards-only` always work offline.
 ```bash
 # Pull an Apertus v1.5 8B instruct model in Ollama, then:
 export LLM_BASE_URL="http://localhost:11434/v1"
-export LLM_NAME="swiss-ai/Apertus-v1.5-8B"
+export LLM_NAME="swiss-ai/apertus-v1.5-8b"
 python src/bhashacut.py my_script.txt
 ```
 

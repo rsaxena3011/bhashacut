@@ -33,7 +33,7 @@ Or with local Ollama (no API key needed):
 
 ```bash
 export LLM_BASE_URL="http://localhost:11434/v1"
-export LLM_NAME="swiss-ai/Apertus-v1.5-8B"
+export LLM_NAME="swiss-ai/apertus-v1.5-8b"
 make run
 ```
 
@@ -41,7 +41,7 @@ make run
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LLM_NAME` | `swiss-ai/Apertus-v1.5-8B` | Apertus model to use |
+| `LLM_NAME` | `swiss-ai/apertus-v1.5-8b` | Apertus model to use |
 | `LLM_BASE_URL` | `https://api.publicai.co/v1` | API endpoint |
 | `LLM_API_KEY` | (none) | API key for the endpoint |
 
